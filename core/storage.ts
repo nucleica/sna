@@ -63,7 +63,7 @@ export async function analyzeDirectory(directory: string) {
     amount += 1;
   }
 
-  log(`${directory} has ${amount} files`);
+  // log(`${directory} has ${amount} files`);
 
   return amount;
 }
