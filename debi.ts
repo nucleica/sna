@@ -18,6 +18,12 @@ export class Debi extends Server {
     this.addRoute(askRoute(this, this.chats, this.tools));
     this.addRoute(addChatRoute(this, this.chats));
     this.addRoute(chatsRoute(this, this.chats));
+    this.addRoute({
+      path: "/greet",
+      handler: () => {
+        return this.respond({ message: "Hello, world!" });
+      },
+    });
 
     this.serve();
 
