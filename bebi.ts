@@ -18,7 +18,9 @@ export class Bebi extends Server {
         try {
           const code = await capturePhoto(path);
 
-          return this.respond({ path });
+          return this.respond({
+            path: `http://${Deno.networkInterfaces()[1].address}/${path}`,
+          });
         } catch (err: any) {
           if (err?.code === "ENOENT") {
             log("FFMPEG not available");
