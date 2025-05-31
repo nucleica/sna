@@ -1,7 +1,7 @@
 {
   "tasks": {
     "dev": "deno run --allow-read --allow-run --allow-write --allow-net main.ts",
-    "bebi": "deno run --allow-net --allow-run  bebi.ts"
+    "bebi": "deno run --allow-net --allow-read --allow-run --allow-write  bebi.ts"
   },
   "imports": {
     "@std/assert": "jsr:@std/assert@1",
