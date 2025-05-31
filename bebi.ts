@@ -5,6 +5,7 @@ import { capturePhoto, ensureFFMPEG } from "./modules/vision/capture.ts";
 
 export class Bebi extends Server {
   storage = new Storage(this);
+  port = 9421;
 
   constructor() {
     super();
@@ -19,7 +20,9 @@ export class Bebi extends Server {
           const code = await capturePhoto(path);
 
           return this.respond({
-            path: `http://${Deno.networkInterfaces()[1].address}/${path}`,
+            path: `http://${
+              Deno.networkInterfaces()[1].address
+            }:${this.port}/${path}`,
           });
         } catch (err: any) {
           if (err?.code === "ENOENT") {
@@ -45,7 +48,7 @@ export class Bebi extends Server {
       },
     });
 
-    this.serve(9421);
+    this.serve(this.port);
 
     fetch("http://192.168.1.12:9420/greet").then(async (res) => {
       console.log(await res.json());
