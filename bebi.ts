@@ -17,6 +17,25 @@ export class Bebi extends Server {
         const path = `storage/cam/${Date.now()}.jpg`;
         try {
           const code = await capturePhoto(path);
+
+          return this.respond({ path });
+        } catch (err: any) {
+          if (err?.code === "ENOENT") {
+            log("FFMPEG not available");
+          }
+          return this.respond({ error: "", path: "" });
+        }
+      },
+    });
+
+    this.addRoute({
+      path: "/analyze-photo",
+      handler: async () => {
+        const path = `storage/cam/${Date.now()}.jpg`;
+        try {
+          const code = await capturePhoto(path);
+
+          moony(path);
           return this.respond({ path });
         } catch (err: any) {
           if (err?.code === "ENOENT") {
@@ -36,3 +55,21 @@ export class Bebi extends Server {
 }
 
 new Bebi();
+
+export async function moony(path: string, prompt?: string) {
+  const c = new Deno.Command(
+    "C:\\Users\\dev\\cognition\\Scripts\\python.exe",
+    {
+      args: [Deno.cwd() + "\\modules\\vision\\see.py", path],
+      stdout: "piped",
+    },
+  );
+
+  const cmd = c.spawn();
+
+  for await (const value of await cmd.stdout.values()) {
+    const data = new TextDecoder().decode(value).trimEnd();
+
+    log(data);
+  }
+}

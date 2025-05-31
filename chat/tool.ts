@@ -128,6 +128,59 @@ export class Tool {
 
             return photo;
           });
+        } else if (tool.name === "take_photo") {
+          this.updateMessage(
+            {
+              ...chatMessage,
+              tools: chatMessage.tools?.map((t) => {
+                if (t.name === tool.name) {
+                  return {
+                    ...t,
+                    status: "in-progress",
+                  };
+                }
+
+                return t;
+              }),
+            },
+            chats,
+            // true
+          );
+
+          fetch(
+            `http://192.168.1.${
+              tool.parameters.id == 1 ? 65 : 12
+            }:9421/analyze-photo`,
+          ).then((res) => {
+            return res.json();
+          }).then((photo: { path: "" }) => {
+            this.updateMessage(
+              {
+                ...chatMessage,
+                tools: chatMessage.tools?.map((t) => {
+                  if (t.name === tool.name) {
+                    return {
+                      ...t,
+                      status: "done",
+                      parameters: {
+                        ...t.parameters,
+                        path:
+                          `http://192.168.1.${
+                            tool.parameters.id == 1 ? 65 : 12
+                          }:9421/` + photo.path,
+                      },
+                    };
+                  }
+
+                  return t;
+                }),
+              },
+              chats,
+              // true
+            );
+
+            return photo;
+          });
         } else {
           this.updateMessage(
             {
