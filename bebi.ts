@@ -30,13 +30,10 @@ export class Bebi extends Server {
 
     this.addRoute({
       path: "/analyze-photo",
-      handler: async () => {
-        const path = `storage/cam/${Date.now()}.jpg`;
+      handler: async (res: { prompt: string; path: string }) => {
         try {
-          const code = await capturePhoto(path);
-
-          moony(path);
-          return this.respond({ path });
+          const text = await moony(res.path, res.prompt);
+          return this.respond({ path: res.path, text });
         } catch (err: any) {
           if (err?.code === "ENOENT") {
             log("FFMPEG not available");
@@ -60,16 +57,23 @@ export async function moony(path: string, prompt?: string) {
   const c = new Deno.Command(
     "C:\\Users\\dev\\cognition\\Scripts\\python.exe",
     {
-      args: [Deno.cwd() + "\\modules\\vision\\see.py", path],
+      args: [
+        Deno.cwd() + "\\modules\\vision\\see.py",
+        path,
+        prompt ? prompt : "medium",
+      ],
       stdout: "piped",
     },
   );
 
   const cmd = c.spawn();
+  let response = "";
 
   for await (const value of await cmd.stdout.values()) {
-    const data = new TextDecoder().decode(value).trimEnd();
+    const data = new TextDecoder().decode(value);
 
-    log(data);
+    response += data;
   }
+
+  return response;
 }
