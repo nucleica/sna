@@ -51,7 +51,7 @@ export class Tool {
                     return t;
                   }),
                 },
-                chats
+                chats,
                 // true
               );
             }
@@ -73,8 +73,61 @@ export class Tool {
                 return t;
               }),
             },
-            chats
+            chats,
           );
+        } else if (tool.name === "take_photo") {
+          this.updateMessage(
+            {
+              ...chatMessage,
+              tools: chatMessage.tools?.map((t) => {
+                if (t.name === tool.name) {
+                  return {
+                    ...t,
+                    status: "in-progress",
+                  };
+                }
+
+                return t;
+              }),
+            },
+            chats,
+            // true
+          );
+
+          fetch(
+            `http://192.168.1.${
+              tool.parameters.id == 1 ? 65 : 12
+            }:9421/take-photo`,
+          ).then((res) => {
+            return res.json();
+          }).then((photo: { path: "" }) => {
+            this.updateMessage(
+              {
+                ...chatMessage,
+                tools: chatMessage.tools?.map((t) => {
+                  if (t.name === tool.name) {
+                    return {
+                      ...t,
+                      status: "done",
+                      parameters: {
+                        ...t.parameters,
+                        path:
+                          `http://192.168.1.${
+                            tool.parameters.id == 1 ? 65 : 12
+                          }:9421/` + photo.path,
+                      },
+                    };
+                  }
+
+                  return t;
+                }),
+              },
+              chats,
+              // true
+            );
+
+            return photo;
+          });
         } else {
           this.updateMessage(
             {
@@ -91,7 +144,7 @@ export class Tool {
               }),
             },
             chats,
-            true
+            true,
           );
         }
       }
@@ -101,7 +154,7 @@ export class Tool {
   async updateMessage(
     chatMessage: ChatMessage,
     chats: Chat[],
-    continueMessage = false
+    continueMessage = false,
   ) {
     const chat = chats.find((chat) =>
       chat.messages.find((message) => message.id === chatMessage.id)
@@ -112,11 +165,11 @@ export class Tool {
     }
 
     const index = chat.messages.findIndex(
-      (message) => message.id === chatMessage.id
+      (message) => message.id === chatMessage.id,
     );
 
     chat.messages[index] = chatMessage;
-    this.server.update("chat-message", chat);
+    this.server.ws.update("chat-message", chat);
 
     if (continueMessage) {
       askRoute(this.server, chats, this).handler({
