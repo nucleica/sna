@@ -5,7 +5,6 @@ import { Storage } from "./core/storage.ts";
 import { addChatRoute } from "./route/add-chat.route.ts";
 import { askRoute } from "./route/ask.route.ts";
 import { chatsRoute } from "./route/chats.route.ts";
-import { simpleAskRoute } from "./route/simple-ask.ts";
 
 export class Debi extends Server {
   chats: Chat[] = [];
@@ -17,7 +16,6 @@ export class Debi extends Server {
     super();
 
     this.addRoute(askRoute(this, this.chats, this.tools));
-    this.addRoute(simpleAskRoute(this, this.chats));
     this.addRoute(addChatRoute(this, this.chats));
     this.addRoute(chatsRoute(this, this.chats));
 
