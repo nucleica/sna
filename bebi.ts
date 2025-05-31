@@ -13,10 +13,10 @@ export class Bebi extends Server {
 
     this.addRoute({
       path: "/take-photo",
-      handler: () => {
+      handler: async () => {
         const path = `storage/cam/${Date.now()}.jpg`;
         try {
-          const code = capturePhoto(path);
+          const code = await capturePhoto(path);
           return this.respond({ path });
         } catch (err: any) {
           if (err?.code === "ENOENT") {
@@ -28,6 +28,10 @@ export class Bebi extends Server {
     });
 
     this.serve(9421);
+
+    fetch("http://192.168.1.12:9420/greet").then(async (res) => {
+      console.log(await res.json());
+    });
   }
 }
 
