@@ -111,10 +111,7 @@ export class Tool {
                       status: "done",
                       parameters: {
                         ...t.parameters,
-                        path:
-                          `http://192.168.1.${
-                            tool.parameters.id == 1 ? 65 : 12
-                          }:9421/` + photo.path,
+                        path: photo.path,
                       },
                     };
                   }
@@ -148,33 +145,50 @@ export class Tool {
           );
 
           fetch(
-            `http://192.168.1.65:9421/analyze-photo`,
+            `http://192.168.1.${
+              tool.parameters.id == 1 ? 65 : 12
+            }:9421/take-photo`,
           ).then((res) => {
             return res.json();
           }).then((photo: { path: "" }) => {
-            this.updateMessage(
+            fetch(
+              `http://192.168.1.65:9421/analyze-photo`,
               {
-                ...chatMessage,
-                tools: chatMessage.tools?.map((t) => {
-                  if (t.name === tool.name) {
-                    return {
-                      ...t,
-                      status: "done",
-                      parameters: {
-                        ...t.parameters,
-                        path: `http://192.168.1.65:9421/` + photo.path,
-                      },
-                    };
-                  }
-
-                  return t;
+                body: JSON.stringify({
+                  prompt: tool?.parameters?.prompt,
+                  path: photo.path,
                 }),
+                headers: { "Content-Type": "application/json" },
+                method: "POST",
               },
-              chats,
-              // true
-            );
+            ).then((res) => {
+              return res.json();
+            }).then((photo: { path: ""; text: "" }) => {
+              this.updateMessage(
+                {
+                  ...chatMessage,
+                  tools: chatMessage.tools?.map((t) => {
+                    if (t.name === tool.name) {
+                      return {
+                        ...t,
+                        status: "done",
+                        parameters: {
+                          ...t.parameters,
+                          text: photo.text,
+                          path: photo.path,
+                        },
+                      };
+                    }
 
-            return photo;
+                    return t;
+                  }),
+                },
+                chats,
+                true,
+              );
+
+              return photo;
+            });
           });
         } else {
           this.updateMessage(
