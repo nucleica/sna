@@ -15,8 +15,9 @@ model = AutoModelForCausalLM.from_pretrained(
 # model.model.compile()
 
 from PIL import Image 
+import requests  
 
-image = Image.open(sys.argv[1])
+image = Image.open(requests.get(sys.argv[1], stream=True).raw)
 encoded_image = model.encode_image(image) 
 
 if image is None:
