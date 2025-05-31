@@ -14,6 +14,15 @@ model = AutoModelForCausalLM.from_pretrained(
   
 # model.model.compile()
 
+from PIL import Image 
+
+image = Image.open(sys.argv[1])
+encoded_image = model.encode_image(image) 
+
+if image is None:
+    print("Invalid image")
+    exit(1)
+
 descriptionLength = "normal"
 
 if (len(sys.argv) > 2):
@@ -22,18 +31,12 @@ if (len(sys.argv) > 2):
     if sys.argv[2] in lengths:
         descriptionLength = sys.argv[2]
 
-from PIL import Image 
+        for t in model.caption(encoded_image, length=descriptionLength, stream=True)["caption"]:
+            print(t, end="", flush=True) 
+    else: 
+        print(model.query(encoded_image, sys.argv[2])["answer"], end="", flush=True)
 
-image = Image.open(sys.argv[1])
 
-if image is None:
-    print("Invalid image")
-    exit(1)
-
-encoded_image = model.encode_image(image) 
-
-for t in model.caption(encoded_image, length=descriptionLength, stream=True)["caption"]:
-    print(t, end="", flush=True) 
     
  
 # objects = model.detect(image, "face")["objects"]
@@ -43,7 +46,7 @@ for t in model.caption(encoded_image, length=descriptionLength, stream=True)["ca
 # no streaming
 #
 
-# print(model.query(image, "How many people are in the image?")["answer"])
+# print()
 
 
 # points = model.point(image, "person")["points"]
