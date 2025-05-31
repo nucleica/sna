@@ -128,7 +128,7 @@ export class Tool {
 
             return photo;
           });
-        } else if (tool.name === "take_photo") {
+        } else if (tool.name === "analyze_device_camera") {
           this.updateMessage(
             {
               ...chatMessage,
@@ -148,9 +148,7 @@ export class Tool {
           );
 
           fetch(
-            `http://192.168.1.${
-              tool.parameters.id == 1 ? 65 : 12
-            }:9421/analyze-photo`,
+            `http://192.168.1.65:9421/analyze-photo`,
           ).then((res) => {
             return res.json();
           }).then((photo: { path: "" }) => {
@@ -164,10 +162,7 @@ export class Tool {
                       status: "done",
                       parameters: {
                         ...t.parameters,
-                        path:
-                          `http://192.168.1.${
-                            tool.parameters.id == 1 ? 65 : 12
-                          }:9421/` + photo.path,
+                        path: `http://192.168.1.65:9421/` + photo.path,
                       },
                     };
                   }
