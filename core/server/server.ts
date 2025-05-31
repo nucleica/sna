@@ -6,7 +6,7 @@ export class Server {
   routes: Route[] = [];
   ws = new Sockets();
 
-  serve(port = 8236) {
+  serve(port = 9420) {
     Deno.serve({ port }, async (req) => {
       const url = new URL(req.url);
 

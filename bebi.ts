@@ -13,14 +13,11 @@ export class Bebi extends Server {
       handler: () => {
         const path = `storage/cam/${Date.now()}.jpg`;
         const code = capturePhoto(path);
-
-        console.log("take-photo", code);
-
         return this.respond({ path });
       },
     });
 
-    this.serve(8237);
+    this.serve(9421);
   }
 }
 
