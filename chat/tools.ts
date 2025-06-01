@@ -42,7 +42,7 @@ export function handleTools(message: ChatMessage): Partial<{
     const index = parsedTools.findIndex((pt) => pt.id === t.id);
 
     if (index === -1) {
-      parsedTools.push(t);
+      parsedTools.push({ ...t, id: crypto.randomUUID() });
     } else {
       parsedTools[index] = {
         ...t,
