@@ -36,7 +36,7 @@ export function detectWindowsCameras() {
   ).map((device) => ({ name: "", device }));
 }
 
-export function detectDevice(deviceName?: string) {
+export function detectDevices() {
   let cameras = [];
 
   if (Deno.build.os === "linux") {
@@ -51,6 +51,11 @@ export function detectDevice(deviceName?: string) {
     cameras = detectWindowsCameras();
   }
 
+  return cameras;
+}
+
+export function detectDevice(deviceName?: string) {
+  const cameras = detectDevices();
   return cameras?.find((d) => d.name === deviceName) || cameras && cameras[0];
 }
 
