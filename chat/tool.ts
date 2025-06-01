@@ -1,9 +1,9 @@
-import { ask } from "../thinker/ask.ts";
-import { Chat, ChatMessage } from "./chat.ts";
+import { PYTHON_PATH } from "../bebi/python.ts";
 import { log } from "../core/log.ts";
+import { Server } from "../core/server/server.ts";
 import { generate } from "../modules/synthesis/kok.ts";
 import { askRoute } from "../route/ask.route.ts";
-import { Server } from "../core/server/server.ts";
+import { Chat, ChatMessage } from "./chat.ts";
 
 export class Tool {
   constructor(private server: Server) {}
@@ -31,7 +31,77 @@ export class Tool {
       if (tool.status === "pending") {
         log("pending", tool.name);
 
-        if (tool.name === "text_to_speech") {
+        if (tool.name === "play_song") {
+          this.updateMessage(
+            {
+              ...chatMessage,
+              tools: chatMessage.tools?.map((t) => {
+                if (t.id === tool.id) {
+                  return {
+                    ...t,
+                    status: "in-progress",
+                  };
+                }
+
+                return t;
+              }),
+            },
+            chats,
+            // true
+          );
+
+          new Promise<{ url: string }>((res, rej) => {
+            const cmd = new Deno.Command(
+              PYTHON_PATH,
+              {
+                args: [
+                  Deno.cwd() + "\\modules\\music\\ty.py",
+                  tool.parameters.song,
+                ],
+              },
+            );
+
+            const out = cmd.outputSync();
+            let message = "";
+
+            out.stdout.forEach((chunk) => {
+              message += chunk;
+            });
+
+            out.stderr.forEach((chunk) => {
+              message += chunk;
+            });
+
+            const mesg = message.split("\n");
+            const dest = mesg.find((m) => m.includes("Destination"));
+
+            const final = dest?.replace("[ExtractAudio] Destination: ", "") ??
+              "";
+
+            res({
+              url: `http://${Deno.networkInterfaces()[1].address}:9420/` +
+                final,
+            });
+          }).then((res: { url: string }) => {
+            this.updateMessage(
+              {
+                ...chatMessage,
+                tools: chatMessage.tools?.map((t) => {
+                  if (t.id === tool.id) {
+                    return {
+                      ...t,
+                      status: "done",
+                      url: res.url,
+                    };
+                  }
+
+                  return t;
+                }),
+              },
+              chats,
+            );
+          });
+        } else if (tool.name === "text_to_speech") {
           generate(tool.parameters.text).then((url) => {
             if (url) {
               const done = {
