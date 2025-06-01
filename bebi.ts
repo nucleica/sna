@@ -14,6 +14,8 @@ export class Bebi extends Server {
   storage = new Storage(this);
   port = 9421;
 
+  moonyQueue: { path: string; prompt: string }[] = [];
+
   constructor() {
     super();
 
@@ -43,13 +45,21 @@ export class Bebi extends Server {
     this.addRoute({
       path: "/analyze-photo",
       handler: async (res: { prompt: string; path: string }) => {
+        this.moonyQueue.push(res);
+
+        if (this.moonyQueue.length > 1) {
+          return this.respond({ queue: this.moonyQueue.length });
+        }
+
         try {
           const text = await moony(res.path, res.prompt);
+          this.moonyQueue = this.moonyQueue.filter((q) => q !== res);
           return this.respond({ path: res.path, text });
         } catch (err: any) {
           if (err?.code === "ENOENT") {
             log("FFMPEG not available");
           }
+          this.moonyQueue = this.moonyQueue.filter((q) => q !== res);
           return this.respond({ error: "", path: "" });
         }
       },

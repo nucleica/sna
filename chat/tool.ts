@@ -229,7 +229,29 @@ export class Tool {
               },
             ).then((res) => {
               return res.json();
-            }).then((photo: { path: ""; text: "" }) => {
+            }).then((photo: { path: ""; text: ""; queue?: number }) => {
+              if (photo.queue) {
+                this.updateMessage(
+                  {
+                    ...chatMessage,
+                    tools: chatMessage.tools?.map((t) => {
+                      if (t.id === tool.id) {
+                        return {
+                          ...t,
+                          status: "pending",
+                        };
+                      }
+
+                      return t;
+                    }),
+                  },
+                  chats,
+                  // true
+                );
+
+                return photo;
+              }
+
               this.updateMessage(
                 {
                   ...chatMessage,
