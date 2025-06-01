@@ -27,14 +27,15 @@ export const addChatRoute = (server: Server, chats: Chat[]) => ({
     const chat = new Chat(
       [
         {
-          content: data.system ? system + data.system : system,
+          content: (data.system ? system + data.system : system) +
+            "\n\n # Chat config\n Selected mannerism: casual",
           id: crypto.randomUUID(),
           tools_string: "",
           role: "system",
           thinking: "",
         },
       ],
-      id
+      id,
     );
 
     chats.push(chat);
