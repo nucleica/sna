@@ -42,6 +42,7 @@ export function detectDevices() {
   if (Deno.build.os === "linux") {
     cameras = commandSync("v4l2-ctl", ["--list-devices"]).split("\n\n")
       .filter((r) => r.trim())
+      .filter((r) => !r.includes("IPU3"))
       .map((r) => {
         const [name, device] = r.split("\n");
 
