@@ -211,26 +211,15 @@ export class Tool {
             chats,
             // true
           );
-
           fetch(
-            `http://${tool.parameters.ip}:9421/take-photo`,
-          ).then((res) => {
-            return res.json();
-          }).then((photo: { path: "" }) => {
-            fetch(
-              `http://192.168.1.65:9421/analyze-photo`,
-              {
-                body: JSON.stringify({
-                  prompt: tool?.parameters?.prompt,
-                  path: photo.path,
-                }),
-                headers: { "Content-Type": "application/json" },
-                method: "POST",
-              },
-            ).then((res) => {
-              return res.json();
-            }).then((photo: { path: ""; text: ""; queue?: number }) => {
-              if (photo.queue) {
+            `http://192.168.1.65:9421/analyze-photo-queue`,
+          ).then((res) => res.json()).then((available) => {
+            if (available) {
+              fetch(
+                `http://${tool.parameters.ip}:9421/take-photo`,
+              ).then(async (res) => {
+                const json = await res.json();
+
                 this.updateMessage(
                   {
                     ...chatMessage,
@@ -238,7 +227,8 @@ export class Tool {
                       if (t.id === tool.id) {
                         return {
                           ...t,
-                          status: "pending",
+                          status: "in-progress",
+                          path: json.path,
                         };
                       }
 
@@ -249,34 +239,72 @@ export class Tool {
                   // true
                 );
 
-                return photo;
-              }
+                return json;
+              }).then((photo: { path: "" }) => {
+                fetch(
+                  `http://192.168.1.65:9421/analyze-photo`,
+                  {
+                    body: JSON.stringify({
+                      prompt: tool?.parameters?.prompt,
+                      path: photo.path,
+                    }),
+                    headers: { "Content-Type": "application/json" },
+                    method: "POST",
+                  },
+                ).then((res) => {
+                  return res.json();
+                }).then((photo: { path: ""; text: ""; queue?: number }) => {
+                  if (photo.queue) {
+                    this.updateMessage(
+                      {
+                        ...chatMessage,
+                        tools: chatMessage.tools?.map((t) => {
+                          if (t.id === tool.id) {
+                            return {
+                              ...t,
+                              status: "pending",
+                            };
+                          }
 
-              this.updateMessage(
-                {
-                  ...chatMessage,
-                  tools: chatMessage.tools?.map((t) => {
-                    if (t.id === tool.id) {
-                      return {
-                        ...t,
-                        status: "done",
-                        parameters: {
-                          ...t.parameters,
-                          text: photo.text,
-                          path: photo.path,
-                        },
-                      };
-                    }
+                          return t;
+                        }),
+                      },
+                      chats,
+                      // true
+                    );
 
-                    return t;
-                  }),
-                },
-                chats,
-                true,
-              );
+                    return photo;
+                  }
 
-              return photo;
-            });
+                  this.updateMessage(
+                    {
+                      ...chatMessage,
+                      tools: chatMessage.tools?.map((t) => {
+                        if (t.id === tool.id) {
+                          return {
+                            ...t,
+                            status: "done",
+                            parameters: {
+                              ...t.parameters,
+                              text: photo.text,
+                              path: photo.path,
+                            },
+                          };
+                        }
+
+                        return t;
+                      }),
+                    },
+                    chats,
+                    (chatMessage.tools?.filter((t) => t.status !== "done")
+                      .length ??
+                      0) <= 1,
+                  );
+
+                  return photo;
+                });
+              });
+            }
           });
         } else {
           this.updateMessage(
@@ -301,7 +329,7 @@ export class Tool {
     });
   }
 
-  async updateMessage(
+  updateMessage(
     chatMessage: ChatMessage,
     chats: Chat[],
     continueMessage = false,
