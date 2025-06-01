@@ -1,8 +1,13 @@
 import { PYTHON_PATH } from "./bebi/python.ts";
+import { commandSync } from "./core/command.ts";
 import { log } from "./core/log.ts";
 import { Server } from "./core/server/server.ts";
 import { Storage } from "./core/storage.ts";
-import { capturePhoto, ensureFFMPEG } from "./modules/vision/capture.ts";
+import {
+  capturePhoto,
+  detectDevices,
+  ensureFFMPEG,
+} from "./modules/vision/capture.ts";
 
 export class Bebi extends Server {
   storage = new Storage(this);
@@ -53,6 +58,12 @@ export class Bebi extends Server {
 
     const features: string[] = [];
 
+    const pyt = commandSync(PYTHON_PATH, ["--version"]);
+
+    if (pyt) {
+      features.push(pyt);
+    }
+
     const config = JSON.parse(new TextDecoder().decode(
       Deno.readFileSync(Deno.cwd() + "/deno.json"),
     ));
@@ -62,6 +73,7 @@ export class Bebi extends Server {
       body: JSON.stringify({
         ip: Deno.networkInterfaces()[1].address,
         version: config.version,
+        devices: detectDevices(),
         time: Date.now(),
         features,
       }),
