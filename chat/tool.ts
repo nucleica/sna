@@ -44,7 +44,7 @@ export class Tool {
                 {
                   ...chatMessage,
                   tools: chatMessage.tools?.map((t) => {
-                    if (t.name === tool.name) {
+                    if (t.id === tool.id) {
                       return done;
                     }
 
@@ -66,7 +66,7 @@ export class Tool {
             {
               ...chatMessage,
               tools: chatMessage.tools?.map((t) => {
-                if (t.name === tool.name) {
+                if (t.id === tool.id) {
                   return inProgress;
                 }
 
@@ -80,7 +80,7 @@ export class Tool {
             {
               ...chatMessage,
               tools: chatMessage.tools?.map((t) => {
-                if (t.name === tool.name) {
+                if (t.id === tool.id) {
                   return {
                     ...t,
                     status: "in-progress",
@@ -95,9 +95,7 @@ export class Tool {
           );
 
           fetch(
-            `http://192.168.1.${
-              tool.parameters.id == 1 ? 65 : 12
-            }:9421/take-photo`,
+            `http://${tool.parameters.ip}:9421/take-photo`,
           ).then((res) => {
             return res.json();
           }).then((photo: { path: "" }) => {
@@ -105,7 +103,7 @@ export class Tool {
               {
                 ...chatMessage,
                 tools: chatMessage.tools?.map((t) => {
-                  if (t.name === tool.name) {
+                  if (t.id === tool.id) {
                     return {
                       ...t,
                       status: "done",
@@ -130,7 +128,7 @@ export class Tool {
             {
               ...chatMessage,
               tools: chatMessage.tools?.map((t) => {
-                if (t.name === tool.name) {
+                if (t.id === tool.id) {
                   return {
                     ...t,
                     status: "in-progress",
@@ -145,9 +143,7 @@ export class Tool {
           );
 
           fetch(
-            `http://192.168.1.${
-              tool.parameters.id == 1 ? 65 : 12
-            }:9421/take-photo`,
+            `http://${tool.parameters.ip}:9421/take-photo`,
           ).then((res) => {
             return res.json();
           }).then((photo: { path: "" }) => {
@@ -168,7 +164,7 @@ export class Tool {
                 {
                   ...chatMessage,
                   tools: chatMessage.tools?.map((t) => {
-                    if (t.name === tool.name) {
+                    if (t.id === tool.id) {
                       return {
                         ...t,
                         status: "done",
@@ -195,7 +191,7 @@ export class Tool {
             {
               ...chatMessage,
               tools: chatMessage.tools?.map((t) => {
-                if (t.name === tool.name) {
+                if (t.id === tool.id) {
                   return {
                     ...t,
                     status: "not-implemented",
