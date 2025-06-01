@@ -22,6 +22,24 @@ export class Debi extends Server {
     this.addRoute(addChatRoute(this, this.chats));
     this.addRoute(chatsRoute(this, this.chats));
     this.addRoute({
+      path: "/mannerisms",
+      handler: () =>
+        this.respond({
+          mannerisms: [
+            "casual",
+            "professional",
+            "sassy",
+            "mean",
+            "whimsical",
+            "snarky",
+            "quirky",
+            "happy",
+            "sad",
+            "angry",
+          ],
+        }),
+    });
+    this.addRoute({
       path: "/greet",
       handler: (
         body: {
