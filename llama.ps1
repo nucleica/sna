@@ -1,0 +1,1 @@
+Invoke-Expression "C:\Users\dev\Sources\llama.cpp\build\bin\Debug\llama-server.exe --temp 0.6 --top-k 20 --top-p 0.95 --min-p 0 --presence-penalty 1.5 --no-context-shift --n-gpu-layers 49 --no-mmap --flash-attn -m C:\Users\dev\Models\Qwen3-14B-Q4_K_M.gguf --host 192.168.1.65 --port 8081 -c 8192"

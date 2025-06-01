@@ -1,0 +1,1 @@
+Invoke-Expression "$env:USERPROFILE\.deno\bin\deno.exe task bebi"
