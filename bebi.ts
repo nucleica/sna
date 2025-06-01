@@ -59,10 +59,13 @@ export class Bebi extends Server {
 
     const features: string[] = [];
 
-    const pyt = commandSync(PYTHON_PATH, ["--version"]);
+    try {
+      const pyt = commandSync(PYTHON_PATH, ["--version"]);
 
-    if (pyt) {
-      features.push(pyt);
+      if (pyt) {
+        features.push(pyt);
+      }
+    } catch (err) {
     }
 
     const config = readConfig();
