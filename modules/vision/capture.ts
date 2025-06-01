@@ -1,11 +1,11 @@
 import { log } from "../../core/log.ts";
 import { commandSync } from "../../core/command.ts";
 
-export function capturePhoto(outputFile: string) {
-  const device = detectDevice();
+export function capturePhoto(outputFile: string, deviceName?: string) {
+  const c = detectDevice(deviceName);
 
   const cmd = new Deno.Command(ffmpegPath(), {
-    args: ffmpegCommand(Deno.build.os, device, outputFile),
+    args: ffmpegCommand(Deno.build.os, c.device, outputFile),
     stdout: "piped",
   }).spawn();
 
@@ -33,22 +33,25 @@ export function detectWindowsCameras() {
   return response.filter((r) => r.includes("Device Description:")).map((r) =>
     "video=" +
     r.replace("Device Description: ", "").replace("\r", "").trim()
-  );
+  ).map((device) => ({ name: "", device }));
 }
 
-export function detectDevice() {
+export function detectDevice(deviceName?: string) {
+  let cameras = [];
+
   if (Deno.build.os === "linux") {
-    const devices = new Deno.Command("v4l2-ctl", { args: ["--list-devices"] })
-      .outputSync().stdout.forEach((chunk) => {
-        console.log(chunk);
+    cameras = commandSync("v4l2-ctl", ["--list-devices"]).split("\n\n")
+      .filter((r) => r.trim())
+      .map((r) => {
+        const [name, device] = r.split("\n");
+
+        return { name, device: device && device.replace("\t", "") };
       });
-
-    return "/dev/video0";
   } else {
-    const cameras = detectWindowsCameras();
-
-    return cameras && cameras[0];
+    cameras = detectWindowsCameras();
   }
+
+  return cameras?.find((d) => d.name === deviceName) || cameras && cameras[0];
 }
 
 export function ffmpegCommand(os: string, device: string, outputFile: string) {
