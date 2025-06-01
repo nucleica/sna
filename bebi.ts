@@ -1,5 +1,6 @@
 import { PYTHON_PATH } from "./bebi/python.ts";
 import { commandSync } from "./core/command.ts";
+import { readConfig } from "./core/config.ts";
 import { log } from "./core/log.ts";
 import { Server } from "./core/server/server.ts";
 import { Storage } from "./core/storage.ts";
@@ -64,9 +65,7 @@ export class Bebi extends Server {
       features.push(pyt);
     }
 
-    const config = JSON.parse(new TextDecoder().decode(
-      Deno.readFileSync(Deno.cwd() + "/deno.json"),
-    ));
+    const config = readConfig();
 
     fetch("http://192.168.1.12:9420/greet", {
       method: "POST",

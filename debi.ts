@@ -1,5 +1,6 @@
 import { Chat } from "./chat/chat.ts";
 import { Tool } from "./chat/tool.ts";
+import { readConfig } from "./core/config.ts";
 import { log } from "./core/log.ts";
 import { Server } from "./core/server/server.ts";
 import { Storage } from "./core/storage.ts";
@@ -15,6 +16,7 @@ export class Debi extends Server {
 
   constructor() {
     super();
+    const config = readConfig();
 
     this.addRoute(askRoute(this, this.chats, this.tools));
     this.addRoute(addChatRoute(this, this.chats));
@@ -40,7 +42,7 @@ export class Debi extends Server {
 
         log(body.devices);
 
-        return this.respond({ message: "Hello, world!" });
+        return this.respond({ message: "Hello", version: config.version });
       },
     });
 
