@@ -22,12 +22,23 @@ export class Debi extends Server {
     this.addRoute({
       path: "/greet",
       handler: (
-        body: { ip: string; time: number; version: string; features: string[] },
+        body: {
+          ip: string;
+          time: number;
+          devices: { name: string; device: string };
+          version: string;
+          features: string[];
+        },
       ) => {
         const now = Date.now();
         const diff = now - body.time;
 
         log(`greet from ${body.ip} took ${diff}ms`);
+        if (body.features.length > 0) {
+          log(`features: ${body.features.join(", ")}`);
+        }
+
+        log(body.devices);
 
         return this.respond({ message: "Hello, world!" });
       },
