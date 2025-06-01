@@ -1,9 +1,8 @@
 import { log } from "../../core/log.ts";
+import { commandSync } from "../../core/command.ts";
 
 export function capturePhoto(outputFile: string) {
-  const os = Deno.build.os;
-
-  const device = os === "linux" ? "/dev/video0" : "video=Integrated Camera";
+  const device = detectDevice();
 
   const cmd = new Deno.Command(ffmpegPath(), {
     args: ffmpegCommand(Deno.build.os, device, outputFile),
@@ -17,6 +16,39 @@ export function capturePhoto(outputFile: string) {
 
     return cmd.status;
   });
+}
+
+export function detectWindowsCameras() {
+  const response = commandSync(
+    "powershell.exe",
+    [
+      "pnputil",
+      "/enum-devices",
+      "/class",
+      "Camera",
+      "/connected",
+    ],
+  ).split("\n");
+
+  return response.filter((r) => r.includes("Device Description:")).map((r) =>
+    "video=" +
+    r.replace("Device Description: ", "").replace("\r", "").trim()
+  );
+}
+
+export function detectDevice() {
+  if (Deno.build.os === "linux") {
+    const devices = new Deno.Command("v4l2-ctl", { args: ["--list-devices"] })
+      .outputSync().stdout.forEach((chunk) => {
+        console.log(chunk);
+      });
+
+    return "/dev/video0";
+  } else {
+    const cameras = detectWindowsCameras();
+
+    return cameras && cameras[0];
+  }
 }
 
 export function ffmpegCommand(os: string, device: string, outputFile: string) {
