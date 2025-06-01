@@ -51,7 +51,21 @@ export class Bebi extends Server {
 
     this.serve(this.port);
 
-    fetch("http://192.168.1.12:9420/greet").then(async (res) => {
+    const features: string[] = [];
+
+    const config = JSON.parse(new TextDecoder().decode(
+      Deno.readFileSync(Deno.cwd() + "/deno.json"),
+    ));
+
+    fetch("http://192.168.1.12:9420/greet", {
+      method: "POST",
+      body: JSON.stringify({
+        ip: Deno.networkInterfaces()[1].address,
+        version: config.version,
+        time: Date.now(),
+        features,
+      }),
+    }).then(async (res) => {
       console.log(await res.json());
     });
   }
