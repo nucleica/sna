@@ -43,17 +43,27 @@ export class Bebi extends Server {
     });
 
     this.addRoute({
+      path: "/analyze-photo-queue",
+      handler: () => this.respond(!this.moonyQueue.length),
+    });
+
+    this.addRoute({
       path: "/analyze-photo",
       handler: async (res: { prompt: string; path: string }) => {
-        this.moonyQueue.push(res);
-
-        if (this.moonyQueue.length > 1) {
+        if (this.moonyQueue.length === 1) {
+          this.moonyQueue = this.moonyQueue.filter((q) =>
+            q.prompt !== res.prompt
+          );
           return this.respond({ queue: this.moonyQueue.length });
         }
 
+        this.moonyQueue.push(res);
+
         try {
           const text = await moony(res.path, res.prompt);
-          this.moonyQueue = this.moonyQueue.filter((q) => q !== res);
+          this.moonyQueue = this.moonyQueue.filter((q) =>
+            q.prompt !== res.prompt
+          );
           return this.respond({ path: res.path, text });
         } catch (err: any) {
           if (err?.code === "ENOENT") {
