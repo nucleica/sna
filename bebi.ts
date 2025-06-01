@@ -1,3 +1,4 @@
+import { PYTHON_PATH } from "./bebi/python.ts";
 import { log } from "./core/log.ts";
 import { Server } from "./core/server/server.ts";
 import { Storage } from "./core/storage.ts";
@@ -60,7 +61,7 @@ new Bebi();
 
 export async function moony(path: string, prompt?: string) {
   const c = new Deno.Command(
-    "C:\\Users\\dev\\cognition\\Scripts\\python.exe",
+    PYTHON_PATH,
     {
       args: [
         Deno.cwd() + "\\modules\\vision\\see.py",
