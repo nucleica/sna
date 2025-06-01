@@ -35,7 +35,7 @@ export class Debi extends Server {
         const now = Date.now();
         const diff = now - body.time;
 
-        log(`greet from ${body.ip} took ${diff}ms`);
+        log(`greet from ${body.ip} (${body.version}) took ${diff}ms`);
         if (body.features.length > 0) {
           log(`features: ${body.features.join(", ")}`);
         }
