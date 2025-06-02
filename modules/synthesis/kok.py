@@ -3,8 +3,7 @@
 
 from kokoro import KPipeline
 import soundfile as sf
-from sys import argv
-import torch  
+from sys import argv 
 
 def generate(path, text):
     pipeline = KPipeline(lang_code='a')
