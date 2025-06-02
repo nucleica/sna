@@ -2,8 +2,10 @@ import { PYTHON_PATH } from "./bebi/python.ts";
 import { commandSync } from "./core/command.ts";
 import { readConfig } from "./core/config.ts";
 import { log } from "./core/log.ts";
+import { myIp } from "./core/network.ts";
 import { Server } from "./core/server/server.ts";
 import { Storage } from "./core/storage.ts";
+import { generate } from "./modules/synthesis/kok.ts";
 import {
   capturePhoto,
   detectDevices,
@@ -29,9 +31,7 @@ export class Bebi extends Server {
           const code = await capturePhoto(path);
 
           return this.respond({
-            path: `http://${
-              Deno.networkInterfaces()[1].address
-            }:${this.port}/${path}`,
+            path: `http://${myIp()}:${this.port}/${path}`,
           });
         } catch (err: any) {
           if (err?.code === "ENOENT") {
@@ -45,6 +45,19 @@ export class Bebi extends Server {
     this.addRoute({
       path: "/analyze-photo-queue",
       handler: () => this.respond(!this.moonyQueue.length),
+    });
+
+    this.addRoute({
+      path: "/speech",
+      handler: async (body: { text: string; id: string }) =>
+        this.respond(
+          {
+            url: `http://${myIp()}:${this.port}/${await generate(
+              body.text,
+              body.id,
+            )}`,
+          },
+        ),
     });
 
     this.addRoute({

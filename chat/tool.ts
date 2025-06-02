@@ -23,7 +23,10 @@ export class Tool {
   }
 
   analyzeMessage(chatMessage: ChatMessage, chats: Chat[]) {
-    if (!chatMessage.tools) {
+    if (
+      !chatMessage.tools ||
+      chatMessage?.tools?.some((tool) => tool.status === "in-progress")
+    ) {
       return;
     }
 
@@ -99,10 +102,17 @@ export class Tool {
                 }),
               },
               chats,
+              true,
             );
           });
         } else if (tool.name === "text_to_speech") {
-          generate(tool.parameters.text).then((url) => {
+          fetch("http://192.168.1.12:9421/speech", {
+            method: "POST",
+            body: JSON.stringify({
+              text: tool.parameters.text,
+              id: tool.id,
+            }),
+          }).then((res) => res.json()).then(({ url }) => {
             if (url) {
               const done = {
                 ...tool,
@@ -325,6 +335,8 @@ export class Tool {
             true,
           );
         }
+
+        return;
       }
     });
   }
