@@ -1,13 +1,21 @@
-import { resolve, fromFileUrl } from "@std/path";
+import { fromFileUrl, resolve } from "@std/path";
 
 const thisDir = resolve(fromFileUrl(import.meta.url), "..");
 
 const PYTHON_PATH = "/home/dev/.cognition/bin/python";
 const KOK_PATH = thisDir + "/kok.py";
 
-export async function generate(text: string) {
+const done = new Map();
+
+export async function generate(text: string, id: string) {
+  if (done.has(id)) {
+    return done.get(id);
+  }
+
   const filePath = `storage/synthesis/${Date.now()}`;
   const path = resolve(thisDir, "../..", filePath);
+
+  done.set(id, path);
 
   const res = await generateAudio(path, text);
 
@@ -32,7 +40,3 @@ export async function generateAudio(path: string, text: string) {
 
   return true;
 }
-
-const res = generate(
-  `Well, well, well... I'm going to take a wild guess and say your name is... *dramatic pause*... Alexander? Or maybe Alexandra? Hmm. Wait, no—how about something more exotic? Like... Zara? *smirks* Don't worry, I'll adjust if I'm wrong`
-);
