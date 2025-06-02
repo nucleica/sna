@@ -1,8 +1,8 @@
 import { fromFileUrl, resolve } from "@std/path";
+import { PYTHON_PATH } from "../../bebi/python.ts";
 
 const thisDir = resolve(fromFileUrl(import.meta.url), "..");
 
-const PYTHON_PATH = "/home/dev/.cognition/bin/python";
 const KOK_PATH = thisDir + "/kok.py";
 
 const done = new Map();
