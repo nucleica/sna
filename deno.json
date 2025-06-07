@@ -1,5 +1,5 @@
 {
-  "version": "0.4.1",
+  "version": "0.5.0",
   "tasks": {
     "dev": "deno run --allow-sys  --allow-read --allow-run --allow-write --allow-net main.ts",
     "bebi": "deno run --allow-sys --allow-net --allow-read --allow-run --allow-write  bebi.ts"

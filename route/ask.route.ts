@@ -123,10 +123,12 @@ export const askRoute = (
 
         const toolResponse = handleTools(chats[chatIndex].messages[index]);
 
-        chats[chatIndex].messages.push(blankMessage("user", {
-          tools_string: toolResponse.tools_string,
-          tools: toolResponse.tools,
-        }));
+        if (toolResponse.tools?.length) {
+          chats[chatIndex].messages.push(blankMessage("user", {
+            tools_string: toolResponse.tools_string,
+            tools: toolResponse.tools,
+          }));
+        }
 
         /*
           if (toolResponse.tools_string) {
