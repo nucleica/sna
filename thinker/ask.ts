@@ -11,18 +11,20 @@ export async function ask(
   finished?: () => void,
 ) {
   const resp = await fetch(API_URL, {
+    headers: { "Content-Type": "application/json" },
+    method: "POST",
+
     body: JSON.stringify({
       messages: chat.messages.map((message) => ({
         content: message.content,
         role: message.role,
       })),
 
-      headers: { "Content-Type": "application/json" },
-      method: "POST",
       cache_prompt: true,
       stream: true,
     }),
   }).catch((err) => {
+    log(err);
     finished && finished();
     return;
   });
