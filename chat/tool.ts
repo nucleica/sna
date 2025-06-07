@@ -409,6 +409,7 @@ export class Tool {
       askRoute(this.server, chats, this).handler({
         messageID: chatMessage.id,
         chatID: chat.id,
+        think: true,
       });
     }
   }
