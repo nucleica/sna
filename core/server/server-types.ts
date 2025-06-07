@@ -12,5 +12,6 @@ export interface UpdateEvent<Type> {
 export interface ChatQuestion {
   messageID?: string;
   question?: string;
+  think?: boolean;
   chatID: string;
 }

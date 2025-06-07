@@ -10,13 +10,7 @@ export class Tool {
   analyze(chats: Chat[]) {
     chats.forEach((chat) => {
       chat.messages.forEach((message) => {
-        if (message.role === "assistant") {
-          this.analyzeMessage(message, chats);
-        } else if (message.role === "user") {
-          // log("juser message");
-        } else {
-          // log("just system");
-        }
+        this.analyzeMessage(message, chats);
       });
     });
   }
@@ -310,7 +304,7 @@ export class Tool {
                       if (t.id === tool.id) {
                         return {
                           ...t,
-                          status: "done",
+                          status: photo.text ? "done" : "error",
                           parameters: {
                             ...t.parameters,
                             text: photo.text,
@@ -323,7 +317,9 @@ export class Tool {
                     }),
                   },
                   chats,
-                  (chatMessage.tools?.filter((t) => t.status !== "done")
+                  (chatMessage.tools?.filter((t) =>
+                    t.status !== "done" && t.status !== "error"
+                  )
                     .length ??
                     0) <= 1,
                 );
@@ -352,7 +348,9 @@ export class Tool {
                 }),
               },
               chats,
-              (chatMessage.tools?.filter((t) => t.status !== "done")
+              (chatMessage.tools?.filter((t) =>
+                t.status !== "done" && t.status !== "error"
+              )
                 .length ??
                 0) <= 1,
             );
@@ -401,7 +399,10 @@ export class Tool {
       (message) => message.id === chatMessage.id,
     );
 
-    chat.messages[index] = chatMessage;
+    chat.messages[index] = {
+      ...chatMessage,
+      content: JSON.stringify(chatMessage.tools),
+    };
     this.server.ws.update("chat-message", chat);
 
     if (continueMessage) {

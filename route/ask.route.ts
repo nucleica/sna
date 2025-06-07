@@ -1,105 +1,132 @@
-import { ask } from "../thinker/ask.ts";
 import { Chat, ChatMessage } from "../chat/chat.ts";
 import { Tool } from "../chat/tool.ts";
 import { handleTools } from "../chat/tools.ts";
 import { ChatQuestion } from "../core/server/server-types.ts";
 import { Server } from "../core/server/server.ts";
+import { ask } from "../thinker/ask.ts";
+
+const NOT_THINK = "<think>\n</think>";
 
 export function blankMessage(
   role: "assistant" | "user",
   data: Partial<ChatMessage> = {},
-) {
+): ChatMessage {
   return {
-    thinking: data.thinking || "",
-    content: data.content || "",
+    tools_string: "",
+    thinking: "",
+    content: "",
+    ...data,
     creation_time: Date.now(),
     id: crypto.randomUUID(),
-    tools_string: "",
     role,
   };
 }
 
-export const askRoute = (server: Server, chats: Chat[], tools: Tool) => ({
+export const askRoute = (
+  server: Server,
+  chats: Chat[],
+  tools: Tool,
+) => ({
   path: "/chat/ask",
   handler: (data: ChatQuestion) => {
-    const chat = chats.find((chat) => chat.id === data.chatID);
+    const chatIndex = chats.findIndex((chat) => chat.id === data.chatID);
 
-    if (!chat) {
+    if (chatIndex === -1) {
       return server.respond({});
     }
 
-    if (data.messageID) {
-      // TODO handle response from tool
-      chat.messages.push(
-        blankMessage("user", { content: "tools not working" }),
+    /*
+      if (data.messageID) {
+        // TODO handle response from tool
+        chats[chatIndex].messages.push(
+          blankMessage("user", { content: "tools not working" }),
+        );
+      } else
+       */ if (data.question) {
+      chats[chatIndex].messages.push(
+        blankMessage("user", { content: data.question }),
       );
-    } else if (data.question) {
-      chat.messages.push(blankMessage("user", { content: data.question }));
     }
 
-    const assistantResponse = blankMessage("assistant");
-    chat.messages.push(assistantResponse);
+    const assistantResponse = blankMessage("assistant", {
+      content: data.think ? "" : NOT_THINK,
+    });
+    chats[chatIndex].messages.push(assistantResponse);
 
-    server.ws.update("chat-message", chat);
+    server.ws.update("chat-message", chats[chatIndex]);
 
     ask(
-      chat,
+      chats[chatIndex],
       (data) => {
         const chunk = new TextDecoder().decode(data);
-        const index = chat.messages.findIndex(
+        const index = chats[chatIndex].messages.findIndex(
           (message) => message.id === assistantResponse.id,
         );
 
         // Mark finished thinking
         if (
-          !chat.messages[index].finished_thinking &&
-          chat.messages[index].thinking.includes("</think>")
+          !chats[chatIndex].messages[index].finished_thinking
         ) {
-          chat.messages[index].finished_thinking = Date.now();
+          if (
+            chats[chatIndex].messages[index].thinking.includes("</think>")
+          ) {
+            chats[chatIndex].messages[index].finished_thinking = Date.now();
+          }
+
+          if (chats[chatIndex].messages[index].content.includes(NOT_THINK)) {
+            chats[chatIndex].messages[index].finished_thinking = Date.now();
+            chats[chatIndex].messages[index].thinking =
+              chats[chatIndex].messages[index].content;
+
+            chats[chatIndex].messages[index].content = "";
+          }
         }
 
         // TODO this is a hack for not thinking mode
         if (
-          chat.messages[index].thinking.length >= 4 &&
-          !chat.messages[index].thinking.includes("<th")
+          chats[chatIndex].messages[index].thinking.length >= 4 &&
+          !chats[chatIndex].messages[index].thinking.includes("<th")
         ) {
-          chat.messages[index].content = `${chat.messages[index].thinking}${
-            chat.messages[index].content
-          }`;
-          chat.messages[index].finished_thinking =
-            chat.messages[index].creation_time;
-          chat.messages[index].thinking = "";
+          chats[chatIndex].messages[index].content = `${
+            chats[chatIndex].messages[index].thinking
+          }${chats[chatIndex].messages[index].content}`;
+          chats[chatIndex].messages[index].finished_thinking =
+            chats[chatIndex].messages[index].creation_time;
+          chats[chatIndex].messages[index].thinking = "";
         }
 
         // apply chunk to thinking or content based on finished thinking
-        if (chat.messages[index].finished_thinking !== undefined) {
-          chat.messages[index].content += chunk;
+        if (chats[chatIndex].messages[index].finished_thinking !== undefined) {
+          chats[chatIndex].messages[index].content += chunk;
         } else {
-          chat.messages[index].thinking += chunk;
+          chats[chatIndex].messages[index].thinking += chunk;
         }
 
         server.ws.update("chat-chunk", {
-          ...chat.messages[index],
-          id: chat.id,
+          ...chats[chatIndex].messages[index],
+          id: chats[chatIndex].id,
           chunk,
         });
       },
       () => {
-        const index = chat.messages.findIndex(
+        const index = chats[chatIndex].messages.findIndex(
           (message) => message.id === assistantResponse.id,
         );
 
         // hack Mark finished thinking if somethink crash
-        if (!chat.messages[index].finished_thinking) {
-          chat.messages[index].finished_thinking =
-            chat.messages[index].creation_time;
+        if (!chats[chatIndex].messages[index].finished_thinking) {
+          chats[chatIndex].messages[index].finished_thinking =
+            chats[chatIndex].messages[index].creation_time;
         }
 
-        chat.messages[index].finish_time = Date.now();
+        chats[chatIndex].messages[index].finish_time = Date.now();
 
-        const toolResponse = handleTools(chat.messages[index]);
+        const toolResponse = handleTools(chats[chatIndex].messages[index]);
 
-        chat.messages[index].tools = toolResponse.tools;
+        chats[chatIndex].messages.push(blankMessage("user", {
+          tools_string: toolResponse.tools_string,
+          tools: toolResponse.tools,
+        }));
 
         /*
           if (toolResponse.tools_string) {
@@ -112,7 +139,7 @@ export const askRoute = (server: Server, chats: Chat[], tools: Tool) => ({
           }
         */
 
-        server.ws.update("chat-message", chat);
+        server.ws.update("chat-message", chats[chatIndex]);
 
         if (toolResponse.tools?.length) {
           setTimeout(() => {
