@@ -1,90 +1,56 @@
 import { ask } from "../thinker/ask.ts";
-import { Chat } from "../chat/chat.ts";
+import { Chat, ChatMessage } from "../chat/chat.ts";
 import { Tool } from "../chat/tool.ts";
 import { handleTools } from "../chat/tools.ts";
-import { log } from "../core/log.ts";
 import { ChatQuestion } from "../core/server/server-types.ts";
 import { Server } from "../core/server/server.ts";
+
+export function blankMessage(
+  role: "assistant" | "user",
+  data: Partial<ChatMessage> = {},
+) {
+  return {
+    thinking: data.thinking || "",
+    content: data.content || "",
+    creation_time: Date.now(),
+    id: crypto.randomUUID(),
+    tools_string: "",
+    role,
+  };
+}
 
 export const askRoute = (server: Server, chats: Chat[], tools: Tool) => ({
   path: "/chat/ask",
   handler: (data: ChatQuestion) => {
     const chat = chats.find((chat) => chat.id === data.chatID);
-    let assistantResponse: Chat["messages"][0] | undefined;
-    let userMessage: Chat["messages"][0] | undefined;
 
     if (!chat) {
       return server.respond({});
     }
 
     if (data.messageID) {
-      const lastUserMessage = chat.messages[chat.messages.length - 2];
-
-      const lastMessage = chat.messages[chat.messages.length - 1];
-
-      if (lastMessage.role !== "user" && lastUserMessage.role === "user") {
-        if (lastUserMessage.content.trim() === "") {
-          log("AI tried to continue indefinitely");
-          return server.respond({});
-        }
-      }
-
-      assistantResponse = {
-        creation_time: Date.now(),
-        id: crypto.randomUUID(),
-        role: "assistant",
-        tools_string: "",
-        thinking: "",
-        content: "",
-      };
-
+      // TODO handle response from tool
       chat.messages.push(
-        {
-          creation_time: Date.now(),
-          id: crypto.randomUUID(),
-          tools_string: "",
-          thinking: "",
-          role: "user",
-          content: "",
-        },
-        assistantResponse
+        blankMessage("user", { content: "tools not working" }),
       );
-      server.ws.update("chat-message", chat);
-    } else {
-      if (data.question) {
-        userMessage = {
-          creation_time: Date.now(),
-          id: crypto.randomUUID(),
-          content: data.question,
-          tools_string: "",
-          thinking: "",
-          role: "user",
-        };
-
-        chat.messages.push(userMessage);
-      }
-
-      assistantResponse = {
-        creation_time: Date.now(),
-        id: crypto.randomUUID(),
-        role: "assistant",
-        tools_string: "",
-        thinking: "",
-        content: "",
-      };
-
-      chat.messages.push(assistantResponse);
-      server.ws.update("chat-message", chat);
+    } else if (data.question) {
+      chat.messages.push(blankMessage("user", { content: data.question }));
     }
+
+    const assistantResponse = blankMessage("assistant");
+    chat.messages.push(assistantResponse);
+
+    server.ws.update("chat-message", chat);
 
     ask(
       chat,
       (data) => {
         const chunk = new TextDecoder().decode(data);
         const index = chat.messages.findIndex(
-          (message) => message.id === assistantResponse.id
+          (message) => message.id === assistantResponse.id,
         );
 
+        // Mark finished thinking
         if (
           !chat.messages[index].finished_thinking &&
           chat.messages[index].thinking.includes("</think>")
@@ -92,6 +58,20 @@ export const askRoute = (server: Server, chats: Chat[], tools: Tool) => ({
           chat.messages[index].finished_thinking = Date.now();
         }
 
+        // TODO this is a hack for not thinking mode
+        if (
+          chat.messages[index].thinking.length >= 4 &&
+          !chat.messages[index].thinking.includes("<th")
+        ) {
+          chat.messages[index].content = `${chat.messages[index].thinking}${
+            chat.messages[index].content
+          }`;
+          chat.messages[index].finished_thinking =
+            chat.messages[index].creation_time;
+          chat.messages[index].thinking = "";
+        }
+
+        // apply chunk to thinking or content based on finished thinking
         if (chat.messages[index].finished_thinking !== undefined) {
           chat.messages[index].content += chunk;
         } else {
@@ -106,8 +86,14 @@ export const askRoute = (server: Server, chats: Chat[], tools: Tool) => ({
       },
       () => {
         const index = chat.messages.findIndex(
-          (message) => message.id === assistantResponse.id
+          (message) => message.id === assistantResponse.id,
         );
+
+        // hack Mark finished thinking if somethink crash
+        if (!chat.messages[index].finished_thinking) {
+          chat.messages[index].finished_thinking =
+            chat.messages[index].creation_time;
+        }
 
         chat.messages[index].finish_time = Date.now();
 
@@ -115,21 +101,25 @@ export const askRoute = (server: Server, chats: Chat[], tools: Tool) => ({
 
         chat.messages[index].tools = toolResponse.tools;
 
-        if (toolResponse.tools_string) {
-          chat.messages[index].tools_string = toolResponse.tools_string;
+        /*
+          if (toolResponse.tools_string) {
+            chat.messages[index].tools_string = toolResponse.tools_string;
 
-          chat.messages[index].content = chat.messages[index].content.replace(
-            toolResponse.tools_string,
-            ""
-          );
+            chat.messages[index].content = chat.messages[index].content.replace(
+              toolResponse.tools_string,
+              "",
+            );
+          }
+        */
 
+        server.ws.update("chat-message", chat);
+
+        if (toolResponse.tools?.length) {
           setTimeout(() => {
             tools.analyze(chats);
           }, 100);
-
-          server.ws.update("chat-message", chat);
         }
-      }
+      },
     );
 
     return server.respond({});
