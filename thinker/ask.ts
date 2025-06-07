@@ -1,50 +1,33 @@
 import { Chat } from "../chat/chat.ts";
+import { log } from "../core/log.ts";
 
-const API_URL = "http://192.168.1.65:8081/v1/chat/completions";
+const API_URL = "http://192.168.1.23:8081/v1/chat/completions";
 
 export const thinkRegex = /<think>.*?(?:<\/think>|$)/gs;
 
 export async function ask(
   chat: Chat,
   response: (data: Uint8Array) => void,
-  finished?: () => void
+  finished?: () => void,
 ) {
   const resp = await fetch(API_URL, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
     body: JSON.stringify({
-      messages: chat.messages.map((message) => {
-        let content = message.content;
+      messages: chat.messages.map((message) => ({
+        content: message.content,
+        role: message.role,
+      })),
 
-        if (message.tools) {
-          const strippedTools = message.tools.map((tool) => {
-            return {
-              name: tool.name,
-              parameters: tool.parameters,
-            };
-          });
-
-          content =
-            content +
-            "\n\n" +
-            "<tool>\n" +
-            JSON.stringify(strippedTools) +
-            "\n</tool>" +
-            "\n\n" +
-            "<tool_response>\n" +
-            JSON.stringify(message.tools) +
-            "\n</tool_response>";
-        }
-
-        return {
-          role: message.role,
-          content,
-        };
-      }),
+      headers: { "Content-Type": "application/json" },
+      method: "POST",
       cache_prompt: true,
       stream: true,
     }),
+  }).catch((err) => {
+    finished && finished();
+    return;
   });
+
+  if (!resp) return;
 
   const reader = resp.body!.getReader();
   const decoder = new TextDecoder();
@@ -119,6 +102,14 @@ export async function simpleAsk(chat: Chat) {
         },*/
       ],
     }),
+  }).catch((err) => {
+    log(err);
+
+    return {
+      ok: false,
+      text: () => "",
+      json: () => {},
+    };
   });
 
   // finish_reason: 'tool_calls' | 'stop'
@@ -135,10 +126,12 @@ export async function simpleAsk(chat: Chat) {
 
   const data = await response.json();
 
+  const exist = data && data.choices && data.choices.length;
+
   return {
-    reasoning_content: data.choices[0].message.reasoning_content,
-    tool_calls: data.choices[0].message.tool_calls,
-    content: data.choices[0].message.content,
-    role: data.choices[0].message.role,
+    reasoning_content: exist && data.choices[0].message.reasoning_content,
+    tool_calls: exist && data.choices[0].message.tool_calls,
+    content: exist && data.choices[0].message.content,
+    role: exist && data.choices[0].message.role,
   };
 }
