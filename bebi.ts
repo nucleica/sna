@@ -113,7 +113,9 @@ export class Bebi extends Server {
         features,
       }),
     }).then(async (res) => {
-      console.log(await res.json());
+      log(await res.json());
+    }).catch(() => {
+      log("Failed to greet");
     });
   }
 }
