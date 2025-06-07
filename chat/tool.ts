@@ -1,7 +1,6 @@
 import { PYTHON_PATH } from "../bebi/python.ts";
 import { log } from "../core/log.ts";
 import { Server } from "../core/server/server.ts";
-import { generate } from "../modules/synthesis/kok.ts";
 import { askRoute } from "../route/ask.route.ts";
 import { Chat, ChatMessage } from "./chat.ts";
 
@@ -112,29 +111,48 @@ export class Tool {
               text: tool.parameters.text,
               id: tool.id,
             }),
-          }).then((res) => res.json()).then(({ url }) => {
-            if (url) {
-              const done = {
-                ...tool,
-                status: "done",
-                url,
-              };
+          }).then((res) => res.json()).then(
+            ({ url }) => {
+              if (url) {
+                this.updateMessage(
+                  {
+                    ...chatMessage,
+                    tools: chatMessage.tools?.map((t) => {
+                      if (t.id === tool.id) {
+                        return {
+                          ...tool,
+                          status: "done",
+                          url,
+                        };
+                      }
 
-              this.updateMessage(
-                {
-                  ...chatMessage,
-                  tools: chatMessage.tools?.map((t) => {
-                    if (t.id === tool.id) {
-                      return done;
-                    }
+                      return t;
+                    }),
+                  },
+                  chats,
+                  // true
+                );
+              }
+            },
+          ).catch((err) => {
+            this.updateMessage(
+              {
+                ...chatMessage,
+                tools: chatMessage.tools?.map((t) => {
+                  if (t.id === tool.id) {
+                    return {
+                      ...tool,
+                      status: "error",
+                      url: "",
+                    };
+                  }
 
-                    return t;
-                  }),
-                },
-                chats,
-                // true
-              );
-            }
+                  return t;
+                }),
+              },
+              chats,
+              // true
+            );
           });
 
           const inProgress = {
@@ -202,8 +220,32 @@ export class Tool {
             );
 
             return photo;
+          }).catch((err) => {
+            this.updateMessage(
+              {
+                ...chatMessage,
+                tools: chatMessage.tools?.map((t) => {
+                  if (t.id === tool.id) {
+                    return {
+                      ...t,
+                      status: "error",
+                      parameters: {
+                        ...t.parameters,
+                        path: "",
+                      },
+                    };
+                  }
+
+                  return t;
+                }),
+              },
+              chats,
+              // true
+            );
+
+            log(err);
           });
-        } else if (tool.name === "analyze_device_camera") {
+        } else if (tool.name === "analyze_image") {
           this.updateMessage(
             {
               ...chatMessage,
@@ -221,14 +263,45 @@ export class Tool {
             chats,
             // true
           );
+
           fetch(
             `http://192.168.1.65:9421/analyze-photo-queue`,
           ).then((res) => res.json()).then((available) => {
             if (available) {
               fetch(
-                `http://${tool.parameters.ip}:9421/take-photo`,
-              ).then(async (res) => {
-                const json = await res.json();
+                `http://192.168.1.65:9421/analyze-photo`,
+                {
+                  body: JSON.stringify({
+                    prompt: tool?.parameters?.prompt,
+                    path: tool?.parameters?.path,
+                  }),
+                  headers: { "Content-Type": "application/json" },
+                  method: "POST",
+                },
+              ).then((res) => {
+                return res.json();
+              }).then((photo: { path: ""; text: ""; queue?: number }) => {
+                if (photo.queue) {
+                  this.updateMessage(
+                    {
+                      ...chatMessage,
+                      tools: chatMessage.tools?.map((t) => {
+                        if (t.id === tool.id) {
+                          return {
+                            ...t,
+                            status: "pending",
+                          };
+                        }
+
+                        return t;
+                      }),
+                    },
+                    chats,
+                    // true
+                  );
+
+                  return photo;
+                }
 
                 this.updateMessage(
                   {
@@ -237,8 +310,12 @@ export class Tool {
                       if (t.id === tool.id) {
                         return {
                           ...t,
-                          status: "in-progress",
-                          path: json.path,
+                          status: "done",
+                          parameters: {
+                            ...t.parameters,
+                            text: photo.text,
+                            path: photo.path,
+                          },
                         };
                       }
 
@@ -246,75 +323,41 @@ export class Tool {
                     }),
                   },
                   chats,
-                  // true
+                  (chatMessage.tools?.filter((t) => t.status !== "done")
+                    .length ??
+                    0) <= 1,
                 );
 
-                return json;
-              }).then((photo: { path: "" }) => {
-                fetch(
-                  `http://192.168.1.65:9421/analyze-photo`,
-                  {
-                    body: JSON.stringify({
-                      prompt: tool?.parameters?.prompt,
-                      path: photo.path,
-                    }),
-                    headers: { "Content-Type": "application/json" },
-                    method: "POST",
-                  },
-                ).then((res) => {
-                  return res.json();
-                }).then((photo: { path: ""; text: ""; queue?: number }) => {
-                  if (photo.queue) {
-                    this.updateMessage(
-                      {
-                        ...chatMessage,
-                        tools: chatMessage.tools?.map((t) => {
-                          if (t.id === tool.id) {
-                            return {
-                              ...t,
-                              status: "pending",
-                            };
-                          }
-
-                          return t;
-                        }),
-                      },
-                      chats,
-                      // true
-                    );
-
-                    return photo;
-                  }
-
-                  this.updateMessage(
-                    {
-                      ...chatMessage,
-                      tools: chatMessage.tools?.map((t) => {
-                        if (t.id === tool.id) {
-                          return {
-                            ...t,
-                            status: "done",
-                            parameters: {
-                              ...t.parameters,
-                              text: photo.text,
-                              path: photo.path,
-                            },
-                          };
-                        }
-
-                        return t;
-                      }),
-                    },
-                    chats,
-                    (chatMessage.tools?.filter((t) => t.status !== "done")
-                      .length ??
-                      0) <= 1,
-                  );
-
-                  return photo;
-                });
+                return photo;
               });
             }
+          }).catch((err) => {
+            this.updateMessage(
+              {
+                ...chatMessage,
+                tools: chatMessage.tools?.map((t) => {
+                  if (t.id === tool.id) {
+                    return {
+                      ...t,
+                      status: "error",
+                      parameters: {
+                        ...t.parameters,
+                        text: "",
+                        path: "",
+                      },
+                    };
+                  }
+
+                  return t;
+                }),
+              },
+              chats,
+              (chatMessage.tools?.filter((t) => t.status !== "done")
+                .length ??
+                0) <= 1,
+            );
+
+            log(err);
           });
         } else {
           this.updateMessage(
