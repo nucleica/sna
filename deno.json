@@ -1,6 +1,7 @@
 {
-  "name": "sna",
+  "name": "@nucleic/sna",
   "version": "0.5.0",
+  "exports": "./core/server/index.ts",
   "tasks": {
     "debi": "deno run --allow-sys  --allow-read --allow-run --allow-write --allow-net main.ts",
     "bebi": "deno run --allow-sys --allow-net --allow-read --allow-run --allow-write  bebi.ts"
