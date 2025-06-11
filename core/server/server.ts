@@ -1,5 +1,5 @@
 import { serveDir } from "@std/http/file-server";
-import { Route } from "../server/server-types.ts";
+import type { Route } from "../server/server-types.ts";
 import { Sockets } from "./sockets.ts";
 
 export class Server {
