@@ -14,7 +14,7 @@ export class Sockets {
     };
 
     socket.onmessage = (event) => {
-      console.log(`RECEIVED: ${event.data}`);
+      console.log(`${event.data}`);
     };
 
     socket.onclose = () => {
@@ -24,9 +24,9 @@ export class Sockets {
         id: uid,
       });
     };
+
     socket.onerror = (error) => {
       this.sockets.delete(uid);
-      console.error("ERROR:", error);
       this.update("socket-error", { sockets: this.sockets.size, id: uid });
     };
 

@@ -1,4 +1,4 @@
-import { Chat } from "./chat/chat.ts";
+import type { Chat } from "./chat/chat.ts";
 import { Tool } from "./chat/tool.ts";
 import { readConfig } from "./core/config.ts";
 import { log } from "./core/log.ts";
