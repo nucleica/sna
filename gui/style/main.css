@@ -1,0 +1,55 @@
+:root {
+  --primary: #4caf50;
+  --accent: #ff5722;
+
+  --background: #121212;
+  --on-background: #e0e0e0;
+
+  --on-surface: #e0e0e0;
+  --surface: #1e1e1e;
+
+  --spacing: 1.5em;
+  --padding: 2em;
+  --space: 0.8em;
+  --shape-large: 0.675em;
+  --shape-medium: 0.465em;
+  --shape-small: 0.35em;
+}
+
+.primary {
+  color: var(--primary);
+}
+
+.accent {
+  color: var(--accent);
+}
+
+ul {
+  padding: var(--padding);
+  flex-direction: column;
+  list-style-type: none;
+  gap: var(--spacing);
+  display: flex;
+}
+
+.border {
+  border: 1px solid rgba(255, 255, 255, 0.4);
+}
+
+button, .button {
+  border-radius: var(--shape-medium);
+  transition: filter 0.2s ease-in-out;
+  background: var(--surface);
+  color: var(--on-surface);
+  padding: var(--space);
+}
+
+button:hover, .button:hover {
+  filter: brightness(1.25);
+  cursor: pointer;
+}
+
+body {
+  background: var(--background);
+  color: var(--on-background);
+}

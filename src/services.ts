@@ -1,6 +1,16 @@
-import { Matter, MATTER_CONFIG_NAME, type MatterConfig } from "@nucleic/matter";
+import {
+  Matter,
+  MATTER_CONFIG_NAME,
+  type MatterConfig,
+} from "../../matter/main.ts";
 import { pathLookup } from "./fs.ts";
 import { SOURCES_PATH } from "./sources.ts";
+
+export interface ServiceStatus {
+  installed: boolean;
+  active: boolean;
+  name: string;
+}
 
 export class Service {
   services: Matter[] = [];

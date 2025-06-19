@@ -5,7 +5,8 @@
   "tasks": {
     "debi": "deno run --allow-sys  --allow-read --allow-run --allow-write --allow-net debi.ts",
     "bebi": "deno run --allow-sys --allow-net --allow-read --allow-run --allow-write  bebi.ts",
-    "start": "deno run --allow-net --allow-run --allow-read main.ts"
+    "start": "deno run --allow-net --allow-run --allow-read main.ts",
+    "ci": "deno run --allow-read --allow-net ci.ts"
   },
   "imports": {
     "@nucleic/matter": "jsr:@nucleic/matter@^0.1.3",
