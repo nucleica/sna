@@ -1,4 +1,4 @@
-import { ChatMessage } from "./chat.ts";
+import { log } from "@nucleic/turtle";
 
 export function handleTools(message: ChatMessage): Partial<{
   tools_string: ChatMessage["tools_string"];
@@ -20,13 +20,13 @@ export function handleTools(message: ChatMessage): Partial<{
   try {
     parsedTools = JSON.parse(text);
   } catch (e) {
-    console.log(e);
-    console.log(text);
+    log(e);
+    log(text);
 
     try {
       parsedTools = JSON.parse(text);
     } catch (e) {
-      console.log("parsing second try failed");
+      log("parsing second try failed");
     }
   }
 

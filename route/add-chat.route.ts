@@ -1,5 +1,5 @@
 import { Chat } from "../chat/chat.ts";
-import { log } from "../core/log.ts";
+import { log } from "@nucleic/turtle";
 import { Server } from "../core/server/server.ts";
 
 let system_temp: string;

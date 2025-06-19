@@ -1,7 +1,7 @@
 import { PYTHON_PATH } from "./bebi/python.ts";
 import { commandSync } from "./core/command.ts";
 import { readConfig } from "./core/config.ts";
-import { log } from "./core/log.ts";
+import { log } from "@nucleic/turtle";
 import { myIp } from "./core/network.ts";
 import { Server } from "./core/server/server.ts";
 import { Storage } from "./core/storage.ts";

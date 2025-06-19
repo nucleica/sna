@@ -1,5 +1,5 @@
 import { PYTHON_PATH } from "../bebi/python.ts";
-import { log } from "../core/log.ts";
+import { log } from "@nucleic/turtle";
 import { Server } from "../core/server/server.ts";
 import { askRoute } from "../route/ask.route.ts";
 import { Chat, ChatMessage } from "./chat.ts";

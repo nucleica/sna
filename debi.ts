@@ -1,7 +1,7 @@
 import type { Chat } from "./chat/chat.ts";
 import { Tool } from "./chat/tool.ts";
 import { readConfig } from "./core/config.ts";
-import { log } from "./core/log.ts";
+import { log } from "@nucleic/turtle";
 import { Server } from "./core/server/server.ts";
 import { Storage } from "./core/storage.ts";
 import { addChatRoute } from "./route/add-chat.route.ts";

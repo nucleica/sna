@@ -1,3 +1,5 @@
+import { log } from "@nucleic/turtle";
+
 const PIPER_PATH = "/home/dev/lib/piper/piper";
 
 export async function generateSpeech(text: string, language: string) {
@@ -8,7 +10,7 @@ export async function generateSpeech(text: string, language: string) {
     stdout: "piped",
   });
 
-  console.log(
+  log(
     PIPER_PATH,
     "-m",
     model,
@@ -22,7 +24,7 @@ export async function generateSpeech(text: string, language: string) {
   const out = await command.spawn().output();
 
   out.stdout.values().forEach((chunk) => {
-    console.log(chunk);
+    log(chunk);
   });
 }
 

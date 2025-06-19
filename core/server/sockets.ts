@@ -1,3 +1,5 @@
+import { o } from "@nucleic/turtle";
+
 export class Sockets {
   sockets = new Map<string, WebSocket>();
 
@@ -14,7 +16,7 @@ export class Sockets {
     };
 
     socket.onmessage = (event) => {
-      console.log(`${event.data}`);
+      o(`${event.data}`);
     };
 
     socket.onclose = () => {

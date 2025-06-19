@@ -1,5 +1,5 @@
 import { Server } from "./server/server.ts";
-import { log } from "./log.ts";
+import { log } from "@nucleic/turtle";
 
 export class Storage {
   directories = ["cam", "synthesis", "audio"];

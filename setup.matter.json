@@ -1,0 +1,5 @@
+[{
+  "name": "nucleic-sna",
+  "exec": "deno task start",
+  "cwd": "/home/dev/sources/sna"
+}]

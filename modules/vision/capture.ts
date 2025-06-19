@@ -1,4 +1,4 @@
-import { log } from "../../core/log.ts";
+import { log } from "@nucleic/turtle";
 import { commandSync } from "../../core/command.ts";
 
 export function capturePhoto(outputFile: string, deviceName?: string) {
@@ -138,10 +138,10 @@ export async function installPackage(pkgName: string) {
     const status = await process.status;
 
     if (status.success) {
-      console.log(
+      log(
         `${pkgName} installation with Winget completed successfully!`,
       );
-      console.log(
+      log(
         `You might need to restart your terminal or log out/in for ${pkgName} to be available in your PATH.`,
       );
     } else {
