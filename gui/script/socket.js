@@ -1,7 +1,15 @@
 const ws = new WebSocket("ws://127.0.0.1:9420");
 
-ws.onopen = () => console.log("open");
-ws.onclose = (er) => console.log("closed");
+const $connection = document.querySelector(".connection");
+
+ws.onopen = () => {
+  $connection.classList.add("open");
+};
+
+ws.onclose = (er) => {
+  $connection.classList.remove("open");
+};
+
 ws.onmessage = (res) => {
   const event = JSON.parse(res.data).message;
   console.log(services);

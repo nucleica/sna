@@ -1,8 +1,4 @@
-import {
-  Matter,
-  MATTER_CONFIG_NAME,
-  type MatterConfig,
-} from "../../matter/main.ts";
+import { Matter, MATTER_CONFIG_NAME, type MatterConfig } from "@nucleic/matter";
 import { pathLookup } from "./fs.ts";
 import { SOURCES_PATH } from "./sources.ts";
 
@@ -10,7 +6,10 @@ export interface ServiceStatus {
   installed: boolean;
   active: boolean;
   failed: boolean;
+  memory?: string;
+  cpu?: string;
   name: string;
+  port?: number;
 }
 
 export class Service {

@@ -102,9 +102,11 @@ if (import.meta.main) {
         s.respond(services.services.map((s) => ({
           installed: s.installed,
           name: s.serviceName,
-          port: s.port,
+          memory: s.memory,
           failed: s.failed,
           active: s.active,
+          cpu: s.cpu,
+          port: s.port,
           //TODO as werong
         })) as ServiceStatus[]),
       path: "/services",
@@ -112,4 +114,8 @@ if (import.meta.main) {
   );
 
   s.serve();
+
+  setInterval(() => {
+    services.services.forEach(async (s) => await s.check());
+  }, 60000);
 }
