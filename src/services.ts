@@ -9,12 +9,18 @@ import { SOURCES_PATH } from "./sources.ts";
 export interface ServiceStatus {
   installed: boolean;
   active: boolean;
+  failed: boolean;
   name: string;
 }
 
 export class Service {
   services: Matter[] = [];
+  lastPort = 9420;
   constructor() {
+  }
+
+  find(service: string) {
+    return this.services.find((s) => s.serviceName === service);
   }
 
   addServices(...paths: string[]) {
@@ -34,10 +40,18 @@ export class Service {
         ) as MatterConfig[];
 
         for (const config of configs) {
-          const matter = new Matter(config.name, config.exec, config.cwd);
+          const matter = new Matter(
+            config.name,
+            config.exec,
+            config.cwd,
+            this.lastPort += 1,
+          );
+
           this.services.push(matter);
         }
       }
     }
+
+    return this.services;
   }
 }
